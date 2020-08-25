@@ -1,6 +1,6 @@
 /*	
  * 	File:				Main.java
- * 	Associated Files:	Deck.java, Rummy.java
+ * 	Associated Files:	Deck.java, Rummy.java, Card.java
  * 	Packages Needed:	
  * 	Author:            	Michael Ngo (https://github.com/yeeshue99)
  * 	Date Modified:      8/17/2020 by Michael Ngo
@@ -9,7 +9,6 @@
  * 	Purpose:			Run a simple War game in console
  */
 
-import java.util.ArrayList;
 import java.util.Scanner;
 
 /*

@@ -1,6 +1,6 @@
 /*	
- * 	File:				War.java
- * 	Associated Files:	Main.java, Deck.java
+ * 	File:				Rummy.java
+ * 	Associated Files:	Main.java, Deck.java, Card.java
  * 	Packages Needed:	java.util.ArrayList, java.util.HashMap, java.util.Scanner
  * 	Author:            	Michael Ngo (https://github.com/yeeshue99)
  * 	Date Modified:      8/18/2020 by Michael Ngo
@@ -14,16 +14,16 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 /*
- * Class:				War
- * Purpose:				Handles War engine and game
- * Methods:				PlayGame, GetDiscard, GetActionChoice, NextPlayer
+ * Class:				Rummy
+ * Purpose:				Handles Rummy engine and game
+ * Methods:				PlayGame, GetDiscardChoice, GetActionChoice, NextPlayer
  */
 public class Rummy {
 
 	int numPlayers = 2;
 	int rounds = 0;
 	Deck deck;
-	ArrayList<ArrayList<String>> allHands;
+	ArrayList<ArrayList<Card>> allHands;
 	String[] actions = { "meld", "discard", "table", "hand" };
 	String[] drawLocations = { "discard", "deck" };
 
@@ -45,12 +45,12 @@ public class Rummy {
 		this.numPlayers = numPlayers;
 		deck = new Deck();
 		System.out.println("Dealing the deck evenly to every player...");
-		allHands = deck.DealCards(numPlayers);
+		allHands = Deck.DealCards(numPlayers);
 		for (int i = 0; i < numPlayers; i++) {
 			System.out.printf("Player #%d, this is the hand you were dealt:%n", (i + 1));
-			deck.DisplayCards(allHands.get(i));
+			Deck.DisplayCards(allHands.get(i));
 			System.out.printf("Okay, Player #%d, let's see if you had any melds...%n", (i + 1));
-			if (!deck.Removecards(allHands.get(i))) {
+			if (!Deck.RemoveCards(allHands.get(i))) {
 				System.out.printf("No melds found!%n%n");
 			}
 		}
@@ -66,58 +66,25 @@ public class Rummy {
 		System.out.println("Welcome to the game of Rummy!");
 
 		int player = 0;
-		int chosenCard = 0;
 
 		while (true) {
 			System.out.println("======================================");
 			System.out.printf("Player #%d, these are your cards:%n", (player + 1));
-			deck.DisplayCards(allHands.get(player));
+			Deck.DisplayCards(allHands.get(player));
 
-			System.out.printf("Do you want to draw from discard or deck? ");
-			System.out.printf("The top of the discard pile is a(n): %s%n", deck.discard.get(0));
-			String choice = sc.next();
-
-			while (!(choice.equalsIgnoreCase("discard") || choice.equalsIgnoreCase("deck"))) {
-				System.out.println("Invalid location! The loations you can choose are: ");
-				System.out.println(Arrays.toString(drawLocations));
-				choice = sc.next();
-			}
-			String cardDrawn = deck.DrawCard(choice);
+			String choice = GetDrawLocation(sc);
+			
+			Card cardDrawn = Deck.DrawCard(choice);
 			allHands.get(player).add(cardDrawn);
-			System.out.printf("Player #%d, you drew %s%n", (player + 1), cardDrawn);
-			deck.DisplayCards(allHands.get(player));
+			System.out.printf("Player #%d, you drew %s%n", (player + 1), cardDrawn.GetLabel());
 			System.out.printf("After drawing, let's see if you have any melds...%n", (player + 1));
-			if (!deck.Removecards(allHands.get(player))) {
+			if (!Deck.RemoveCards(allHands.get(player))) {
 				System.out.printf("No melds found!%n%n");
 			}
+			Deck.DisplayCards(allHands.get(player));
 
-			String action = "";
+			ChoiceLoop(sc, player);
 			
-			while (!action.equalsIgnoreCase("discard")) {
-				System.out.println("What do you want to do now? (To see list of actions type \"help\"):");
-				action = GetActionChoice(sc);
-				if (action.equalsIgnoreCase(actions[0])) {
-					if (!deck.CheckMelds(allHands.get(player))) {
-						System.out.println("No melds found!");
-					}
-				}
-				else if (action.equalsIgnoreCase(actions[1])) {
-					chosenCard = GetDiscardChoice(sc, player);
-					System.out.printf("Throwing out your %s...%n", allHands.get(player).get(chosenCard));
-					deck.discard.add(0, allHands.get(player).get(chosenCard));
-					allHands.get(player).remove(chosenCard);
-				}
-				else if(action.equalsIgnoreCase(actions[2])){
-					deck.DisplayMelds();
-				}
-				else if(action.equalsIgnoreCase(actions[3])) {
-					deck.DisplayCards(allHands.get(player));
-				}
-				else {
-					System.out.println("The actions you can take are: ");
-					System.out.println(Arrays.toString(actions));
-				}
-			}
 			if (allHands.get(player).size() <= 0) {
 				break;
 			}
@@ -125,21 +92,39 @@ public class Rummy {
 		}
 		System.out.printf("Someone has no more cards! The game lasted %d rounds!%n", rounds);
 		int score = 0;
-		for (ArrayList<String> hand : allHands) {
-			score += deck.CalculateScore(hand);
+		for (ArrayList<Card> hand : allHands) {
+			score += Deck.CalculateScore(hand);
 		}
 		int[] playerAndScore = new int[2];
 		playerAndScore[0] = player;
 		playerAndScore[1] = score;
 		return playerAndScore;
-		// return rounds;
+	}
+	
+	/*
+	 * Function:			GetDrawLocation
+	 * Params: 				Java command line input(Scanner)
+	 * Purpose:				Determine where player wants to draw from
+	 * Returns: 			where to draw from(String)
+	 */
+	private String GetDrawLocation(Scanner sc) {
+		System.out.printf("Do you want to draw from discard or deck? ");
+		System.out.printf("The top of the discard pile is a(n): %s%n", Deck.discard.get(0).GetValue());
+		String choice = sc.next();
+
+		while (!(choice.equalsIgnoreCase("discard") || choice.equalsIgnoreCase("deck"))) {
+			System.out.println("Invalid location! The loations you can choose are: ");
+			System.out.println(Arrays.toString(drawLocations));
+			choice = sc.next();
+		}
+		return choice;
 	}
 	
 	/*
 	 * Function:			GetDiscardchoice
 	 * Params: 				Java command line input(Scanner), Current player(int)
-	 * Purpose:				Communicates with user to find what card to discard from hand
-	 * Returns: 			Card to discard(int)
+	 * Purpose:				Determines what card to discard from hand
+	 * Returns: 			Index of card to discard(int)
 	 */
 	private int GetDiscardChoice(Scanner sc, int player) {
 		System.out.printf("Choose a card to discard (1-%d): ", allHands.get(player).size());
@@ -155,6 +140,43 @@ public class Rummy {
 		return chosenCard - 1;
 	}
 
+	/*
+	 * Function:			ChoiceLoop
+	 * Params: 				Java command line input(Scanner), Current player(int)
+	 * Purpose:				Run turn loop of an individual player
+	 * Returns: 			
+	 */
+	private void ChoiceLoop(Scanner sc, int player) {
+		int chosenCard = 0;
+		String action = "";
+		
+		while (!action.equalsIgnoreCase("discard")) {
+			System.out.println("What do you want to do now? (To see list of actions type \"help\"):");
+			action = GetActionChoice(sc);
+			if (action.equalsIgnoreCase(actions[0])) {
+				if (!Deck.CheckMelds(allHands.get(player))) {
+					System.out.println("No melds found!");
+				}
+			}
+			else if (action.equalsIgnoreCase(actions[1])) {
+				chosenCard = GetDiscardChoice(sc, player);
+				System.out.printf("Throwing out your %s...%n", allHands.get(player).get(chosenCard).GetLabel());
+				Deck.discard.add(0, allHands.get(player).get(chosenCard));
+				allHands.get(player).remove(chosenCard);
+			}
+			else if(action.equalsIgnoreCase(actions[2])){
+				Deck.DisplayMelds();
+			}
+			else if(action.equalsIgnoreCase(actions[3])) {
+				Deck.DisplayCards(allHands.get(player));
+			}
+			else {
+				System.out.println("The actions you can take are: ");
+				System.out.println(Arrays.toString(actions));
+			}
+		}
+	}
+	
 	/*
 	 * Function:			GetActionChoice
 	 * Params: 				Java command line input(Scanner)
